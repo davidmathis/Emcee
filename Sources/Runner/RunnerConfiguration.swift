@@ -19,8 +19,7 @@ public struct RunnerConfiguration {
         environment: [String: String],
         simulatorSettings: SimulatorSettings,
         testTimeoutConfiguration: TestTimeoutConfiguration
-        )
-    {
+    ) {
         var environment = environment
         environment["FBCONTROLCORE_FAST_TIMEOUT"] = testTimeoutConfiguration.fbxtestFastTimeout.flatMap { "\($0)" }
         environment["FBCONTROLCORE_REGULAR_TIMEOUT"] = testTimeoutConfiguration.fbxtestRegularTimeout.flatMap { "\($0)" }

@@ -60,9 +60,13 @@ final class DumpRuntimeTestsCommand: Command {
         )
 
         let tempFolder = try TemporaryFolder()
-        let onDemandSimulatorPool = OnDemandSimulatorPool<DefaultSimulatorController>(
+        let onDemandSimulatorPool = LazyCachedOnDemandSimulatorPool(
             resourceLocationResolver: resourceLocationResolver,
-            tempFolder: tempFolder
+            tempFolder: tempFolder,
+            simulatorControllerProvider: { simulator in
+                // TODO
+                fatalError()
+            }
         )
         defer { onDemandSimulatorPool.deleteSimulators() }
         

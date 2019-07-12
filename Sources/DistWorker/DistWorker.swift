@@ -50,9 +50,14 @@ public final class DistWorker: SchedulerDelegate {
         Logger.debug("Registered with server. Worker configuration: \(workerConfiguration)")
         startReportingWorkerIsAlive(interval: workerConfiguration.reportAliveInterval)
         
-        let onDemandSimulatorPool = OnDemandSimulatorPool<DefaultSimulatorController>(
+        let onDemandSimulatorPool = LazyCachedOnDemandSimulatorPool(
             resourceLocationResolver: resourceLocationResolver,
-            tempFolder: tempFolder)
+            tempFolder: tempFolder,
+            simulatorControllerProvider: { simulator in
+                // TODO
+                fatalError()
+            }
+        )
         defer { onDemandSimulatorPool.deleteSimulators() }
         
         _ = try runTests(
@@ -89,15 +94,16 @@ public final class DistWorker: SchedulerDelegate {
     
     private func runTests(
         workerConfiguration: WorkerConfiguration,
-        onDemandSimulatorPool: OnDemandSimulatorPool<DefaultSimulatorController>,
-        tempFolder: TemporaryFolder)
-        throws -> [TestingResult]
-    {
-        let configuration = bucketConfigurationFactory.createConfiguration(
-            workerConfiguration: workerConfiguration,
+        onDemandSimulatorPool: OnDemandSimulatorPool,
+        tempFolder: TemporaryFolder
+    ) throws -> [TestingResult] {
+        let configuration = SchedulerConfiguration(
+            testRunExecutionBehavior: workerConfiguration.testRunExecutionBehavior,
+            testTimeoutConfiguration: workerConfiguration.testTimeoutConfiguration,
             schedulerDataSource: DistRunSchedulerDataSource(onNextBucketRequest: fetchNextBucket),
             onDemandSimulatorPool: onDemandSimulatorPool
         )
+        
         let eventBus = try EventBusFactory.createEventBusWithAttachedPluginManager(
             pluginLocations: bucketConfigurationFactory.pluginLocations + workerConfiguration.pluginUrls.map {
                 PluginLocation(ResourceLocation.remoteUrl($0))

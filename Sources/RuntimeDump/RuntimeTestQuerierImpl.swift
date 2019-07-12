@@ -16,15 +16,15 @@ public final class RuntimeTestQuerierImpl: RuntimeTestQuerier {
     private let testQueryEntry = TestEntry(testName: TestName(className: "NonExistingTest", methodName: "fakeTest"), tags: [], caseId: nil)
     private let resourceLocationResolver: ResourceLocationResolver
     private let tempFolder: TemporaryFolder
-    private let onDemandSimulatorPool: OnDemandSimulatorPool<DefaultSimulatorController>
+    private let onDemandSimulatorPool: OnDemandSimulatorPool
     static let runtimeTestsJsonFilename = "runtime_tests.json"
     
     public init(
         eventBus: EventBus,
         resourceLocationResolver: ResourceLocationResolver,
-        onDemandSimulatorPool: OnDemandSimulatorPool<DefaultSimulatorController>,
-        tempFolder: TemporaryFolder)
-    {
+        onDemandSimulatorPool: OnDemandSimulatorPool,
+        tempFolder: TemporaryFolder
+    ) {
         self.eventBus = eventBus
         self.resourceLocationResolver = resourceLocationResolver
         self.onDemandSimulatorPool = onDemandSimulatorPool
@@ -134,11 +134,10 @@ public final class RuntimeTestQuerierImpl: RuntimeTestQuerier {
     private func simulatorForRuntimeDump(configuration: RuntimeDumpConfiguration) throws -> AllocatedSimulator {
         if let applicationTestSupport = configuration.applicationTestSupport {
             let simulatorPool = try onDemandSimulatorPool.pool(
-                key: OnDemandSimulatorPool.Key(
-                    numberOfSimulators: 1,
+                key: SimulatorPoolKey(
                     developerDir: configuration.developerDir,
-                    testDestination: configuration.testDestination,
-                    fbsimctl: applicationTestSupport.fbsimctl
+                    numberOfSimulators: 1,
+                    testDestination: configuration.testDestination
                 )
             )
 
@@ -146,6 +145,7 @@ public final class RuntimeTestQuerierImpl: RuntimeTestQuerier {
         } else {
             return AllocatedSimulator(
                 simulator: Shimulator.shimulator(
+                    developerDir: configuration.developerDir,
                     testDestination: configuration.testDestination,
                     workingDirectory: try tempFolder.pathByCreatingDirectories(components: ["shimulator"])
                 ),

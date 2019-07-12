@@ -908,8 +908,9 @@ let package = Package(
                 "PathLib",
                 "ResourceLocationResolver",
                 "RuntimeDump",
-                "TestingFakeFbxctest",
-                "TemporaryStuff"
+                "SimulatorPoolTestHelpers",
+                "TemporaryStuff",
+                "TestingFakeFbxctest"
             ]
         ),
         .target(
@@ -992,6 +993,13 @@ let package = Package(
                 "fbxctest"
             ]
         ),
+        .target(
+            // MARK: SimulatorPoolTestHelpers
+            name: "SimulatorPoolTestHelpers",
+            dependencies: [
+                "SimulatorPool"
+            ]
+        ),
         .testTarget(
             // MARK: SimulatorPoolTests
             name: "SimulatorPoolTests",
@@ -1001,6 +1009,7 @@ let package = Package(
                 "PathLib",
                 "ResourceLocationResolver",
                 "SimulatorPool",
+                "SimulatorPoolTestHelpers",
                 "SynchronousWaiter",
                 "TemporaryStuff"
             ]

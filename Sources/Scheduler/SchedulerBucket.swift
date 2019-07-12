@@ -9,7 +9,6 @@ public final class SchedulerBucket: CustomStringConvertible, Equatable {
     public let testDestination: TestDestination
     public let testExecutionBehavior: TestExecutionBehavior
     public let testType: TestType
-    public let toolResources: ToolResources
     public let toolchainConfiguration: ToolchainConfiguration
     
     public var description: String {
@@ -24,7 +23,6 @@ public final class SchedulerBucket: CustomStringConvertible, Equatable {
         testDestination: TestDestination,
         testExecutionBehavior: TestExecutionBehavior,
         testType: TestType,
-        toolResources: ToolResources,
         toolchainConfiguration: ToolchainConfiguration
     ) {
         self.bucketId = bucketId
@@ -34,7 +32,6 @@ public final class SchedulerBucket: CustomStringConvertible, Equatable {
         self.testDestination = testDestination
         self.testExecutionBehavior = testExecutionBehavior
         self.testType = testType
-        self.toolResources = toolResources
         self.toolchainConfiguration = toolchainConfiguration
     }
     
@@ -47,7 +44,6 @@ public final class SchedulerBucket: CustomStringConvertible, Equatable {
             testDestination: bucket.testDestination,
             testExecutionBehavior: testExecutionBehavior,
             testType: bucket.testType,
-            toolResources: bucket.toolResources,
             toolchainConfiguration: bucket.toolchainConfiguration
         )
     }
@@ -60,7 +56,6 @@ public final class SchedulerBucket: CustomStringConvertible, Equatable {
             && left.testDestination == right.testDestination
             && left.testExecutionBehavior == right.testExecutionBehavior
             && left.testType == right.testType
-            && left.toolResources == right.toolResources
             && left.toolchainConfiguration == right.toolchainConfiguration
     }
 }

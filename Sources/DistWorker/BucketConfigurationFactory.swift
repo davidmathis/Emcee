@@ -44,20 +44,6 @@ final class BucketConfigurationFactory {
         return try TemporaryFolder(containerPath: path, deleteOnDealloc: true)
     }
     
-    func createConfiguration(
-        workerConfiguration: WorkerConfiguration,
-        schedulerDataSource: SchedulerDataSource,
-        onDemandSimulatorPool: OnDemandSimulatorPool<DefaultSimulatorController>)
-        -> SchedulerConfiguration
-    {
-        return SchedulerConfiguration(
-            testRunExecutionBehavior: workerConfiguration.testRunExecutionBehavior,
-            testTimeoutConfiguration: workerConfiguration.testTimeoutConfiguration,
-            schedulerDataSource: schedulerDataSource,
-            onDemandSimulatorPool: onDemandSimulatorPool
-        )
-    }
-    
     public var pluginLocations: [PluginLocation] {
         let plugins = FileManager.default.findFiles(
             path: packagePath(containerPath, .plugin).pathString,

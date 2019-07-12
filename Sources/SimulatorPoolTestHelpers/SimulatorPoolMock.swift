@@ -4,8 +4,8 @@ import ModelsTestHelpers
 import PathLib
 import TemporaryStuff
 
-class SimulatorPoolMock: SimulatorPool<FakeSimulatorController> {
-    init() throws {
+public class SimulatorPoolMock: SimulatorPool {
+    public init() throws {
         simulatorController = FakeSimulatorController(
             simulator: Shimulator(
                 index: 0,
@@ -25,14 +25,14 @@ class SimulatorPoolMock: SimulatorPool<FakeSimulatorController> {
         )
     }
 
-    let simulatorController: FakeSimulatorController
+    public let simulatorController: FakeSimulatorController
     
-    override func allocateSimulatorController() throws -> FakeSimulatorController {
+    override public func allocateSimulatorController() throws -> FakeSimulatorController {
         return simulatorController
     }
 
-    var freedSimulator: FakeSimulatorController?
-    override func freeSimulatorController(_ simulator: FakeSimulatorController) {
+    public var freedSimulator: FakeSimulatorController?
+    override public func freeSimulatorController(_ simulator: FakeSimulatorController) {
         freedSimulator = simulator
     }
 }

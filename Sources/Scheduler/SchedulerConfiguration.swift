@@ -5,17 +5,20 @@ import Runner
 import SimulatorPool
 
 public class SchedulerConfiguration {
+    public let fbxctestLocation: FbxctestLocation
     public let testRunExecutionBehavior: TestRunExecutionBehavior
     public let testTimeoutConfiguration: TestTimeoutConfiguration
     public let schedulerDataSource: SchedulerDataSource
-    public let onDemandSimulatorPool: OnDemandSimulatorPool<DefaultSimulatorController>
+    public let onDemandSimulatorPool: OnDemandSimulatorPool
 
     public init(
+        fbxctestLocation: FbxctestLocation,
         testRunExecutionBehavior: TestRunExecutionBehavior,
         testTimeoutConfiguration: TestTimeoutConfiguration,
         schedulerDataSource: SchedulerDataSource,
-        onDemandSimulatorPool: OnDemandSimulatorPool<DefaultSimulatorController>)
-    {
+        onDemandSimulatorPool: OnDemandSimulatorPool
+    ) {
+        self.fbxctestLocation = fbxctestLocation
         self.testRunExecutionBehavior = testRunExecutionBehavior
         self.testTimeoutConfiguration = testTimeoutConfiguration
         self.schedulerDataSource = schedulerDataSource

@@ -15,7 +15,6 @@ public final class BucketFixtures {
             testDestination: TestDestinationFixtures.testDestination,
             testExecutionBehavior: TestExecutionBehavior(environment: [:], numberOfRetries: numberOfRetries),
             testType: TestType.uiTest,
-            toolResources: ToolResourcesFixtures.fakeToolResources(),
             toolchainConfiguration: ToolchainConfiguration(developerDir: .current)
         )
     }

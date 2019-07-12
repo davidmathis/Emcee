@@ -93,7 +93,6 @@ public final class TestHistoryTrackerImpl: TestHistoryTracker {
                 testDestination: bucket.testDestination,
                 testExecutionBehavior: bucket.testExecutionBehavior,
                 testType: bucket.testType,
-                toolResources: bucket.toolResources,
                 toolchainConfiguration: bucket.toolchainConfiguration
             )
         }

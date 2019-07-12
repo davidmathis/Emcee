@@ -1,6 +1,6 @@
 import Foundation
 
-public enum DeveloperDir: Codable, Hashable {
+public enum DeveloperDir: Codable, CustomStringConvertible, Hashable {
     case current
     case useXcode(CFBundleShortVersionString: String)
     
@@ -33,6 +33,15 @@ public enum DeveloperDir: Codable, Hashable {
         case .useXcode(let CFBundleShortVersionString):
             try container.encode(KindId.useXcode, forKey: .kind)
             try container.encode(CFBundleShortVersionString, forKey: .CFBundleShortVersionString)
+        }
+    }
+    
+    public var description: String {
+        switch self {
+        case .current:
+            return "current"
+        case .useXcode(let CFBundleShortVersionString):
+            return "Xcode \(CFBundleShortVersionString)"
         }
     }
 }

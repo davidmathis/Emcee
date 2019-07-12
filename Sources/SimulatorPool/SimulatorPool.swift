@@ -12,10 +12,11 @@ import TemporaryStuff
  * There is no blocking mechanisms, the assumption is that the callers will use up to numberOfSimulators of threads
  * to borrow and free the simulators.
  */
-public class SimulatorPool<T>: CustomStringConvertible where T: SimulatorController {
+open class SimulatorPool: CustomStringConvertible {
+    private let developerDir: DeveloperDir
     private let numberOfSimulators: UInt
     private let testDestination: TestDestination
-    private var controllers: OrderedSet<T>
+    private var controllers: [SimulatorController]
     private var automaticCleanupWorkItem: DispatchWorkItem?
     private let automaticCleanupTiumeout: TimeInterval
     private let syncQueue = DispatchQueue(label: "ru.avito.SimulatorPool")
@@ -26,22 +27,23 @@ public class SimulatorPool<T>: CustomStringConvertible where T: SimulatorControl
     }
     
     public init(
+        developerDir: DeveloperDir,
         numberOfSimulators: UInt,
         testDestination: TestDestination,
-        fbsimctl: ResolvableResourceLocation,
-        developerDir: DeveloperDir,
         tempFolder: TemporaryFolder,
-        automaticCleanupTiumeout: TimeInterval = 10) throws
-    {
+        automaticCleanupTiumeout: TimeInterval = 10,
+        simulatorControllerProvider: (Simulator) throws -> (SimulatorController)
+    ) throws {
+        self.developerDir = developerDir
         self.numberOfSimulators = numberOfSimulators
         self.testDestination = testDestination
         self.automaticCleanupTiumeout = automaticCleanupTiumeout
         controllers = try SimulatorPool.createControllers(
+            developerDir: developerDir,
             count: numberOfSimulators,
             testDestination: testDestination,
-            fbsimctl: fbsimctl,
-            developerDir: developerDir,
-            tempFolder: tempFolder
+            tempFolder: tempFolder,
+            simulatorControllerProvider: simulatorControllerProvider
         )
     }
     
@@ -49,18 +51,19 @@ public class SimulatorPool<T>: CustomStringConvertible where T: SimulatorControl
         deleteSimulators()
     }
     
-    public func allocateSimulatorController() throws -> T {
+    open func allocateSimulatorController() throws -> SimulatorController {
         return try syncQueue.sync {
-            guard let simulator = controllers.removeLast() else {
+            guard !controllers.isEmpty else {
                 throw BorrowError.noSimulatorsLeft
             }
+            let simulator = controllers.removeLast()
             Logger.verboseDebug("Allocated simulator: \(simulator)")
             cancelAutomaticCleanup()
             return simulator
         }
     }
     
-    public func freeSimulatorController(_ simulator: T) {
+    open func freeSimulatorController(_ simulator: SimulatorController) {
         syncQueue.sync {
             controllers.append(simulator)
             Logger.verboseDebug("Freed simulator: \(simulator)")
@@ -68,7 +71,7 @@ public class SimulatorPool<T>: CustomStringConvertible where T: SimulatorControl
         }
     }
     
-    public func deleteSimulators() {
+    open func deleteSimulators() {
         syncQueue.sync {
             cancelAutomaticCleanup()
             Logger.verboseDebug("\(self): deleting simulators")
@@ -82,7 +85,7 @@ public class SimulatorPool<T>: CustomStringConvertible where T: SimulatorControl
         }
     }
     
-    public func shutdownSimulators() {
+    open func shutdownSimulators() {
         syncQueue.sync {
             cancelAutomaticCleanup()
             Logger.verboseDebug("\(self): deleting simulators")
@@ -97,18 +100,23 @@ public class SimulatorPool<T>: CustomStringConvertible where T: SimulatorControl
     }
     
     private static func createControllers(
+        developerDir: DeveloperDir,
         count: UInt,
         testDestination: TestDestination,
-        fbsimctl: ResolvableResourceLocation,
-        developerDir: DeveloperDir,
-        tempFolder: TemporaryFolder
-    ) throws -> OrderedSet<T> {
-        var result = OrderedSet<T>()
+        tempFolder: TemporaryFolder,
+        simulatorControllerProvider: (Simulator) throws -> (SimulatorController)
+    ) throws -> [SimulatorController] {
+        var result = [SimulatorController]()
         for index in 0 ..< count {
             let folderName = "sim_\(testDestination.deviceType.removingWhitespaces())_\(testDestination.runtime)_\(index)"
             let workingDirectory = try tempFolder.pathByCreatingDirectories(components: [folderName])
-            let simulator = Simulator(index: index, testDestination: testDestination, workingDirectory: workingDirectory)
-            let controller = T(simulator: simulator, fbsimctl: fbsimctl, developerDir: developerDir)
+            let simulator = Simulator(
+                index: index,
+                developerDir: developerDir,
+                testDestination: testDestination,
+                workingDirectory: workingDirectory
+            )
+            let controller = try simulatorControllerProvider(simulator)
             result.append(controller)
         }
         return result
@@ -132,15 +140,5 @@ public class SimulatorPool<T>: CustomStringConvertible where T: SimulatorControl
         }
         cleanUpQueue.asyncAfter(deadline: .now() + automaticCleanupTiumeout, execute: cancellationWorkItem)
         self.automaticCleanupWorkItem = cancellationWorkItem
-    }
-}
-
-private extension OrderedSet {
-    mutating func removeLast() -> T? {
-        guard let objectToRemove = last else {
-            return nil
-        }
-        remove(objectToRemove)
-        return objectToRemove
     }
 }

@@ -1,7 +1,8 @@
-@testable import SimulatorPool
 import Models
 import ModelsTestHelpers
 import ResourceLocationResolver
+import SimulatorPool
+import SimulatorPoolTestHelpers
 import SynchronousWaiter
 import TemporaryStuff
 import XCTest

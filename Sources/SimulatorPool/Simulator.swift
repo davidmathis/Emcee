@@ -7,6 +7,7 @@ import PathLib
 /// Simulator set is a private to simctl structure that desribes a set of simulators.
 public class Simulator: Hashable, CustomStringConvertible {
     public let index: UInt
+    public let developerDir: DeveloperDir
     public let testDestination: TestDestination
     public let workingDirectory: AbsolutePath
     
@@ -15,7 +16,7 @@ public class Simulator: Hashable, CustomStringConvertible {
     }
     
     public var description: String {
-        return "Simulator \(index): \(testDestination.deviceType) \(testDestination.runtime) at: \(workingDirectory)"
+        return "Simulator \(index): \(testDestination.deviceType) \(testDestination.runtime) at: \(workingDirectory), developerDir: \(developerDir)"
     }
     
     public var simulatorInfo: SimulatorInfo {
@@ -37,20 +38,28 @@ public class Simulator: Hashable, CustomStringConvertible {
         return contents.compactMap({ UUID(uuidString: $0) }).first
     }
  
-    init(index: UInt, testDestination: TestDestination, workingDirectory: AbsolutePath) {
+    init(
+        index: UInt,
+        developerDir: DeveloperDir,
+        testDestination: TestDestination,
+        workingDirectory: AbsolutePath
+    ) {
         self.index = index
+        self.developerDir = developerDir
         self.testDestination = testDestination
         self.workingDirectory = workingDirectory
     }
     
     public static func == (left: Simulator, right: Simulator) -> Bool {
         return left.index == right.index
+            && left.developerDir == right.developerDir
             && left.workingDirectory == right.workingDirectory
             && left.testDestination == right.testDestination
     }
     
     public func hash(into hasher: inout Hasher) {
         hasher.combine(index)
+        hasher.combine(developerDir)
         hasher.combine(testDestination)
         hasher.combine(workingDirectory)
     }

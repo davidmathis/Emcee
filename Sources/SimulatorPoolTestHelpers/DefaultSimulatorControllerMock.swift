@@ -2,15 +2,15 @@
 import Foundation
 import Models
 
-final class DefaultSimulatorControllerMock: DefaultSimulatorController {
+public final class DefaultSimulatorControllerMock: DefaultSimulatorController {
 
-    let simulator: Simulator
-    let fbsimctl: ResolvableResourceLocation
-    let developerDir: DeveloperDir
+    public let simulator: Simulator
+    public let fbsimctl: ResolvableResourceLocation
+    public let developerDir: DeveloperDir
 
-    var didCallDelete = false
+    public var didCallDelete = false
 
-    required init(
+    public required init(
         simulator: Simulator,
         fbsimctl: ResolvableResourceLocation,
         developerDir: DeveloperDir
@@ -26,11 +26,11 @@ final class DefaultSimulatorControllerMock: DefaultSimulatorController {
         )
     }
 
-    override func bootedSimulator() throws -> Simulator {
+    public override func bootedSimulator() throws -> Simulator {
         return simulator
     }
 
-    override func deleteSimulator() throws {
+    public override func deleteSimulator() throws {
         didCallDelete = true
     }
 }

@@ -1,8 +1,9 @@
-import XCTest
-import SimulatorPool
 import ModelsTestHelpers
-import TemporaryStuff
+import SimulatorPool
+import SimulatorPoolTestHelpers
 import SynchronousWaiter
+import TemporaryStuff
+import XCTest
 
 final class SimulatorPoolConvenienceTests: XCTestCase {
     func test__simulator_allocated() throws {

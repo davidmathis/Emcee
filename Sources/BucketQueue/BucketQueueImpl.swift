@@ -203,7 +203,6 @@ final class BucketQueueImpl: BucketQueue {
                         testDestination: stuckBucket.bucket.testDestination,
                         testExecutionBehavior: stuckBucket.bucket.testExecutionBehavior,
                         testType: stuckBucket.bucket.testType,
-                        toolResources: stuckBucket.bucket.toolResources,
                         toolchainConfiguration: stuckBucket.bucket.toolchainConfiguration
                     )
                 }

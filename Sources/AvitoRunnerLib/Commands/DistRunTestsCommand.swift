@@ -134,9 +134,13 @@ final class DistRunTestsCommand: Command {
             testDestination: testDestinationConfigurations.elementAtIndex(0, "First test destination").testDestination,
             testEntries: testArgFile.entries
         )
-        let onDemandSimulatorPool = OnDemandSimulatorPool<DefaultSimulatorController>(
+        let onDemandSimulatorPool = LazyCachedOnDemandSimulatorPool(
             resourceLocationResolver: resourceLocationResolver,
-            tempFolder: tempFolder
+            tempFolder: tempFolder,
+            simulatorControllerProvider: { simulator in
+                // TODO
+                fatalError()
+            }
         )
         defer { onDemandSimulatorPool.deleteSimulators() }
         let runtimeTestQuerier = RuntimeTestQuerierImpl(

@@ -8,7 +8,6 @@ public final class Bucket: Codable, Hashable, CustomStringConvertible, CustomDeb
     public let simulatorSettings: SimulatorSettings
     public let testDestination: TestDestination
     public let testExecutionBehavior: TestExecutionBehavior
-    public let toolResources: ToolResources
     public let testType: TestType
     public let toolchainConfiguration: ToolchainConfiguration
 
@@ -20,7 +19,6 @@ public final class Bucket: Codable, Hashable, CustomStringConvertible, CustomDeb
         testDestination: TestDestination,
         testExecutionBehavior: TestExecutionBehavior,
         testType: TestType,
-        toolResources: ToolResources,
         toolchainConfiguration: ToolchainConfiguration
     ) {
         self.bucketId = bucketId
@@ -30,7 +28,6 @@ public final class Bucket: Codable, Hashable, CustomStringConvertible, CustomDeb
         self.testDestination = testDestination
         self.testExecutionBehavior = testExecutionBehavior
         self.testType = testType
-        self.toolResources = toolResources
         self.toolchainConfiguration = toolchainConfiguration
     }
     
@@ -39,7 +36,7 @@ public final class Bucket: Codable, Hashable, CustomStringConvertible, CustomDeb
     }
     
     public var debugDescription: String {
-        return "<\((type(of: self))) \(bucketId) \(testType) \(testDestination), \(toolResources), \(buildArtifacts), \(testEntries.debugDescription)>"
+        return "<\((type(of: self))) \(bucketId) \(testType) \(testDestination), \(buildArtifacts), \(testEntries.debugDescription)>"
     }
     
     public func hash(into hasher: inout Hasher) {
@@ -49,7 +46,6 @@ public final class Bucket: Codable, Hashable, CustomStringConvertible, CustomDeb
         hasher.combine(simulatorSettings)
         hasher.combine(testDestination)
         hasher.combine(testExecutionBehavior)
-        hasher.combine(toolResources)
         hasher.combine(testType)
         hasher.combine(toolchainConfiguration)
     }
@@ -61,7 +57,6 @@ public final class Bucket: Codable, Hashable, CustomStringConvertible, CustomDeb
         && left.simulatorSettings == right.simulatorSettings
         && left.testDestination == right.testDestination
         && left.testExecutionBehavior == right.testExecutionBehavior
-        && left.toolResources == right.toolResources
         && left.testType == right.testType
         && left.toolchainConfiguration == right.toolchainConfiguration
     }

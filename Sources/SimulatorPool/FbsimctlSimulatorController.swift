@@ -11,9 +11,8 @@ import ResourceLocationResolver
  * Prepares and returns the simulator it owns. API is expected to be used from non multithreaded environment,
  * i.e. from serial queue.
  */
-public class DefaultSimulatorController: SimulatorController, CustomStringConvertible {
+open class FbsimctlSimulatorController: SimulatorController, CustomStringConvertible {
     private let simulator: Simulator
-    private let developerDir: DeveloperDir
     private let developerDirLocator = DeveloperDirLocator()
     private let fbsimctl: ResolvableResourceLocation
     private let maximumBootAttempts = 2
@@ -24,24 +23,22 @@ public class DefaultSimulatorController: SimulatorController, CustomStringConver
 
     required public init(
         simulator: Simulator,
-        fbsimctl: ResolvableResourceLocation,
-        developerDir: DeveloperDir
+        fbsimctl: ResolvableResourceLocation
     ) {
         self.simulator = simulator
         self.fbsimctl = fbsimctl
-        self.developerDir = developerDir
     }
 
-    public func bootedSimulator() throws -> Simulator {
+    open func bootedSimulator() throws -> Simulator {
         try attemptToSwitchState(targetStates: [.booted])
         return simulator
     }
 
-    public func deleteSimulator() throws {
+    open func deleteSimulator() throws {
         try attemptToSwitchState(targetStates: [.absent])
     }
 
-    public func shutdownSimulator() throws {
+    open func shutdownSimulator() throws {
         try attemptToSwitchState(targetStates: [.created, .absent])
     }
 
@@ -102,7 +99,7 @@ public class DefaultSimulatorController: SimulatorController, CustomStringConver
     }
 
     private func performBootSimulatorAction() throws {
-        return try DefaultSimulatorController.bootQueue.sync {
+        return try FbsimctlSimulatorController.bootQueue.sync {
             var bootAttempt = 0
             while true {
                 do {
@@ -189,7 +186,7 @@ public class DefaultSimulatorController: SimulatorController, CustomStringConver
                     "--direct-launch", "--", "listen"
                 ],
                 environment: [
-                    "DEVELOPER_DIR": try developerDirLocator.path(developerDir: developerDir).pathString
+                    "DEVELOPER_DIR": try developerDirLocator.path(developerDir: simulator.developerDir).pathString
                 ]
             )
         )
@@ -269,16 +266,14 @@ public class DefaultSimulatorController: SimulatorController, CustomStringConver
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(simulator)
-        hasher.combine(developerDir)
     }
 
-    public static func == (left: DefaultSimulatorController, right: DefaultSimulatorController) -> Bool {
+    public static func == (left: FbsimctlSimulatorController, right: FbsimctlSimulatorController) -> Bool {
         return left.simulator == right.simulator
-            && left.developerDir == right.developerDir
     }
 
     public var description: String {
-        return "Controller for simulator \(simulator), developer dir: \(developerDir)"
+        return "Controller for simulator \(simulator)"
     }
 
     // MARK: - Errors

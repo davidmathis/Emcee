@@ -127,9 +127,14 @@ final class RunTestsCommand: Command {
             testDestination: testDestinationConfigurations.elementAtIndex(0, "First test destination").testDestination,
             testEntries: testArgFile.entries
         )
-        let onDemandSimulatorPool = OnDemandSimulatorPool<DefaultSimulatorController>(
+        let onDemandSimulatorPool = LazyCachedOnDemandSimulatorPool(
             resourceLocationResolver: resourceLocationResolver,
-            tempFolder: tempFolder)
+            tempFolder: tempFolder,
+            simulatorControllerProvider: { simulator in
+                // TODO
+                fatalError()
+            }
+        )
         defer { onDemandSimulatorPool.deleteSimulators() }
         let runtimeTestQuerier = RuntimeTestQuerierImpl(
             eventBus: eventBus,
@@ -170,7 +175,7 @@ final class RunTestsCommand: Command {
         configuration: LocalTestRunConfiguration,
         eventBus: EventBus,
         tempFolder: TemporaryFolder,
-        onDemandSimulatorPool: OnDemandSimulatorPool<DefaultSimulatorController>
+        onDemandSimulatorPool: OnDemandSimulatorPool
     ) throws {
         Logger.verboseDebug("Configuration: \(configuration)")
         

@@ -30,8 +30,7 @@ public final class Scheduler {
         tempFolder: TemporaryFolder,
         resourceLocationResolver: ResourceLocationResolver,
         schedulerDelegate: SchedulerDelegate?
-        )
-    {
+    ) {
         self.eventBus = eventBus
         self.configuration = configuration
         self.resourceSemaphore = ListeningSemaphore(
@@ -145,11 +144,10 @@ public final class Scheduler {
     
     private func runBucketOnce(bucket: SchedulerBucket, testsToRun: [TestEntry]) throws -> TestingResult {
         let simulatorPool = try configuration.onDemandSimulatorPool.pool(
-            key: OnDemandSimulatorPool.Key(
-                numberOfSimulators: configuration.testRunExecutionBehavior.numberOfSimulators,
+            key: SimulatorPoolKey(
                 developerDir: bucket.toolchainConfiguration.developerDir,
-                testDestination: bucket.testDestination,
-                fbsimctl: bucket.toolResources.fbsimctl
+                numberOfSimulators: configuration.testRunExecutionBehavior.numberOfSimulators,
+                testDestination: bucket.testDestination
             )
         )
 
@@ -160,7 +158,7 @@ public final class Scheduler {
             eventBus: eventBus,
             configuration: RunnerConfiguration(
                 testType: bucket.testType,
-                fbxctest: bucket.toolResources.fbxctest,
+                fbxctest: configuration.fbxctestLocation,
                 buildArtifacts: bucket.buildArtifacts,
                 environment: bucket.testExecutionBehavior.environment,
                 simulatorSettings: bucket.simulatorSettings,
