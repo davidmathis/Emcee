@@ -1,14 +1,15 @@
 import Logging
+import Models
 
 public final class AllocatedSimulator {
-    public let simulator: Simulator
+    public let simulatorInfo: SimulatorInfo
     public let releaseSimulator: () -> ()
 
     public init(
-        simulator: Simulator,
+        simulatorInfo: SimulatorInfo,
         releaseSimulator: @escaping () -> ()
     ) {
-        self.simulator = simulator
+        self.simulatorInfo = simulatorInfo
         self.releaseSimulator = releaseSimulator
     }
 }
@@ -19,7 +20,7 @@ extension SimulatorPool {
 
         do {
             return AllocatedSimulator(
-                simulator: try simulatorController.bootedSimulator(),
+                simulatorInfo: try simulatorController.bootedSimulator(),
                 releaseSimulator: { self.freeSimulatorController(simulatorController) }
             )
         } catch {

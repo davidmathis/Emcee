@@ -91,7 +91,7 @@ public final class Runner {
             entriesToRun: entries,
             testEntryResults: testEntryResults(
                 runResult: runResult,
-                simulatorId: simulatorInfo.simulatorSetPath // TODO
+                simulatorId: simulatorInfo.simulatorUuid
             ),
             subprocessStandardStreamsCaptureConfig: lastSubprocessStandardStreamsCaptureConfig
         )
@@ -148,7 +148,7 @@ public final class Runner {
         let result = prepareResults(
             collectedTestStoppedEvents: collectedTestStoppedEvents,
             requestedEntriesToRun: entriesToRun,
-            simulatorId: simulatorInfo.simulatorSetPath // TODO
+            simulatorId: simulatorInfo.simulatorUuid
         )
         
         eventBus.post(event: .runnerEvent(.didRun(results: result, testContext: testContext)))

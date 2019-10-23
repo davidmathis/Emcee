@@ -11,8 +11,8 @@ final class SimulatorPoolConvenienceTests: XCTestCase {
         let allocatedSimulator = try pool.allocateSimulator()
 
         XCTAssertEqual(
-            allocatedSimulator.simulator,
-            SimulatorPoolMock.simulatorController.simulator
+            allocatedSimulator.simulatorInfo,
+            SimulatorPoolMock.simulatorController.simulatorInfo
         )
     }
 
@@ -22,13 +22,13 @@ final class SimulatorPoolConvenienceTests: XCTestCase {
         allocatedSimulator.releaseSimulator()
 
         XCTAssertEqual(
-            allocatedSimulator.simulator,
-            SimulatorPoolMock.simulatorController.simulator
+            allocatedSimulator.simulatorInfo,
+            SimulatorPoolMock.simulatorController.simulatorInfo
         )
         
         XCTAssertEqual(
-            SimulatorPoolMock.simulatorController.simulator,
-            (pool.freedSimulator as? FakeSimulatorController)?.simulator
+            SimulatorPoolMock.simulatorController.simulatorInfo,
+            (pool.freedSimulator as? FakeSimulatorController)?.simulatorInfo
         )
     }
 }

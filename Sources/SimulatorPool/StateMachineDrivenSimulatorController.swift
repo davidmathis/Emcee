@@ -7,11 +7,12 @@ import SynchronousWaiter
 
 public final class StateMachineDrivenSimulatorController: SimulatorController {
     private var currentSimulatorState = SimulatorStateMachine.State.absent
-    private let simulator: Simulator
     private let developerDir: DeveloperDir
     private let developerDirLocator: DeveloperDirLocator
     private let simulatorStateMachine: SimulatorStateMachine
     private let simulatorStateMachineActionExecutor: SimulatorStateMachineActionExecutor
+    private var simulatorInfo: SimulatorInfo?
+    private let testDestination: TestDestination
     
     private let maximumBootAttempts = 2
     private static let bootQueue = DispatchQueue(label: "SimulatorBootQueue")
@@ -19,22 +20,25 @@ public final class StateMachineDrivenSimulatorController: SimulatorController {
     public init(
         developerDir: DeveloperDir,
         developerDirLocator: DeveloperDirLocator,
-        simulator: Simulator,
         simulatorStateMachine: SimulatorStateMachine,
-        simulatorStateMachineActionExecutor: SimulatorStateMachineActionExecutor
+        simulatorStateMachineActionExecutor: SimulatorStateMachineActionExecutor,
+        testDestination: TestDestination
     ) {
         self.developerDir = developerDir
         self.developerDirLocator = developerDirLocator
-        self.simulator = simulator
         self.simulatorStateMachine = simulatorStateMachine
         self.simulatorStateMachineActionExecutor = simulatorStateMachineActionExecutor
+        self.testDestination = testDestination
     }
     
     // MARK: - SimulatorController
     
-    public func bootedSimulator() throws -> Simulator {
+    public func bootedSimulator() throws -> SimulatorInfo {
         try attemptToSwitchState(targetStates: [.booted])
-        return simulator
+        guard let simulatorInfo = simulatorInfo else {
+            throw SimulatorError.unableToLocateSimulatorUuid
+        }
+        return simulatorInfo
     }
 
     public func deleteSimulator() throws {
@@ -73,36 +77,27 @@ public final class StateMachineDrivenSimulatorController: SimulatorController {
     }
     
     private func create() throws {
-        Logger.verboseDebug("Creating simulator: \(simulator)")
-        let simulatorSetPath = simulator.simulatorSetContainerPath
-        try FileManager.default.createDirectory(atPath: simulatorSetPath, withIntermediateDirectories: true)
+        Logger.verboseDebug("Creating simulator: \(testDestination)")
 
-        try simulatorStateMachineActionExecutor.performCreateSimulatorAction(
+        let simulatorInfo = try simulatorStateMachineActionExecutor.performCreateSimulatorAction(
             environment: try environment(),
-            simulatorSetPath: simulatorSetPath,
-            testDestination: simulator.testDestination
+            testDestination: testDestination
         )
-        
-        guard let simulatorUuid = simulator.uuid else {
-            throw SimulatorError.unableToLocateSimulatorUuid
-        }
-        Logger.debug("Created simulator with UUID: \(simulatorUuid)")
+        Logger.debug("Created simulator \(simulatorInfo)")
+        self.simulatorInfo = simulatorInfo
     }
     
     private func boot() throws {
-        let containerContents = try FileManager.default.contentsOfDirectory(atPath: simulator.simulatorSetContainerPath.pathString)
-        let simulatorUuids = containerContents.filter { UUID(uuidString: $0) != nil }
-        guard simulatorUuids.count > 0, let simulatorUuid = simulatorUuids.first else {
+        guard let simulatorInfo = simulatorInfo else {
             throw SimulatorError.unableToLocateSimulatorUuid
         }
-
-        Logger.verboseDebug("Booting simulator: \(simulator)")
+        
+        Logger.verboseDebug("Booting simulator: \(simulatorInfo)")
         
         let performBoot = {
             try self.simulatorStateMachineActionExecutor.performBootSimulatorAction(
                 environment: try self.environment(),
-                simulatorSetPath: self.simulator.simulatorSetContainerPath,
-                simulatorUuid: simulatorUuid
+                simulatorInfo: simulatorInfo
             )
         }
         
@@ -111,10 +106,10 @@ public final class StateMachineDrivenSimulatorController: SimulatorController {
             while true {
                 do {
                     try performBoot()
-                    Logger.debug("Booted simulator \(simulator) using #\(bootAttempt + 1) attempts")
+                    Logger.debug("Booted simulator \(simulatorInfo) using #\(bootAttempt + 1) attempts")
                     break
                 } catch {
-                    Logger.error("Attempt to boot simulator \(simulator.testDestination.destinationString) failed: \(error)")
+                    Logger.error("Attempt to boot simulator \(testDestination.destinationString) failed: \(error)")
                     bootAttempt += 1
                     if bootAttempt < maximumBootAttempts {
                         SynchronousWaiter.wait(timeout: Double(bootAttempt) * 3.0, description: "Time gap between reboot attempts")
@@ -128,72 +123,69 @@ public final class StateMachineDrivenSimulatorController: SimulatorController {
     }
     
     private func shutdown() throws {
-        guard let simulatorUuid = simulator.simulatorInfo.simulatorUuid else {
-            Logger.debug("Cannot shutdown simulator, no UUID: \(simulator)")
+        guard let simulatorInfo = simulatorInfo else {
+            Logger.warning("Cannot shutdown simulator \(testDestination): simulator not yet created")
             return
         }
-        Logger.debug("Shutting down simulator \(simulatorUuid)")
+        Logger.debug("Shutting down simulator \(simulatorInfo)")
         
         try simulatorStateMachineActionExecutor.performShutdownSimulatorAction(
             environment: try environment(),
-            simulatorSetPath: simulator.simulatorSetContainerPath,
-            simulatorUuid: simulatorUuid
+            simulatorInfo: simulatorInfo
         )
     }
 
     private func delete() throws {
-        guard let simulatorUuid = simulator.simulatorInfo.simulatorUuid else {
-            Logger.debug("Cannot delete simulator, no UUID: \(simulator)")
+        guard let simulatorInfo = simulatorInfo else {
+            Logger.warning("Cannot delete simulator \(testDestination): simulator not yet created")
             return
         }
-        Logger.debug("Deleting simulator \(simulatorUuid)")
+        Logger.debug("Deleting simulator \(simulatorInfo)")
         
         try simulatorStateMachineActionExecutor.performDeleteSimulatorAction(
             environment: try environment(),
-            simulatorSetPath: simulator.simulatorSetContainerPath,
-            simulatorUuid: simulatorUuid
+            simulatorInfo: simulatorInfo
         )
         
+        self.simulatorInfo = nil
+        
         try attemptToDeleteSimulatorFiles(
-            simulatorUuid: simulatorUuid
+            simulatorInfo: simulatorInfo
         )
     }
     
     private func attemptToDeleteSimulatorFiles(
-        simulatorUuid: String
+        simulatorInfo: SimulatorInfo
     ) throws {
-        try deleteSimulatorSetContainer()
-        try deleteSimulatorWorkingDirectory()
-        try deleteSimulatorLogs(simulatorUuid:simulatorUuid)
+        try deleteSimulatorContainer(simulatorInfo: simulatorInfo)
+        try deleteSimulatorLogs(simulatorInfo: simulatorInfo)
     }
     
     private func deleteSimulatorLogs(
-        simulatorUuid: String
+        simulatorInfo: SimulatorInfo
     ) throws {
         let simulatorLogsPath = ("~/Library/Logs/CoreSimulator/" as NSString)
             .expandingTildeInPath
-            .appending(pathComponent: simulatorUuid)
+            .appending(pathComponent: simulatorInfo.simulatorUuid)
         if FileManager.default.fileExists(atPath: simulatorLogsPath) {
-            Logger.verboseDebug("Removing logs of simulator \(simulator)")
+            Logger.verboseDebug("Removing logs of simulator \(simulatorInfo)")
             try FileManager.default.removeItem(atPath: simulatorLogsPath)
+        } else {
+            Logger.verboseDebug("No simulator logs found for \(simulatorInfo)")
         }
     }
     
-    private func deleteSimulatorSetContainer() throws {
-        if FileManager.default.fileExists(atPath: simulator.simulatorSetContainerPath.pathString) {
-            Logger.verboseDebug("Removing files left by simulator \(simulator)")
-            try FileManager.default.removeItem(atPath: simulator.simulatorSetContainerPath.pathString)
+    private func deleteSimulatorContainer(
+        simulatorInfo: SimulatorInfo
+    ) throws {
+        if FileManager.default.fileExists(atPath: simulatorInfo.simulatorPath) {
+            Logger.verboseDebug("Removing files left by simulator \(simulatorInfo)")
+            try FileManager.default.removeItem(atPath: simulatorInfo.simulatorPath)
         }
     }
-    private func deleteSimulatorWorkingDirectory() throws {
-        if FileManager.default.fileExists(atPath: simulator.workingDirectory.pathString) {
-            Logger.verboseDebug("Removing working directory of simulator \(simulator)")
-            try FileManager.default.removeItem(atPath: simulator.workingDirectory.pathString)
-        }
-    }
-    
+
     // MARK: - Envrironment
-    
+
     private func environment() throws -> [String: String] {
         return [
             "DEVELOPER_DIR": try developerDirLocator.path(developerDir: developerDir).pathString
@@ -208,7 +200,7 @@ public final class StateMachineDrivenSimulatorController: SimulatorController {
         var description: String {
             switch self {
             case .unableToLocateSimulatorUuid:
-                return "Failed to boot simulator: failed to locate simulator's UUID"
+                return "Failed to obtain simulator's UUID"
             }
         }
     }

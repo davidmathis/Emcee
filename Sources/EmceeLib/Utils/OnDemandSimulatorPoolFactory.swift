@@ -14,7 +14,8 @@ public final class OnDemandSimulatorPoolFactory {
             developerDirLocator: developerDirLocator,
             resourceLocationResolver: resourceLocationResolver,
             simulatorControllerProvider: DefaultSimulatorControllerProvider(
-                resourceLocationResolver: resourceLocationResolver
+                resourceLocationResolver: resourceLocationResolver,
+                temporaryFolder: tempFolder
             ),
             tempFolder: tempFolder
         )

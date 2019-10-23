@@ -1,6 +1,7 @@
 @testable import SimulatorPool
 import DeveloperDirLocator
 import DeveloperDirLocatorTestHelpers
+import Foundation
 import Models
 import ModelsTestHelpers
 import PathLib
@@ -8,9 +9,10 @@ import TemporaryStuff
 
 public final class SimulatorPoolMock: SimulatorPool {
     public static let simulatorController = FakeSimulatorController(
-        simulator: Shimulator(
-            testDestination: TestDestinationFixtures.testDestination,
-            workingDirectory: .root
+        simulatorInfo: SimulatorInfo(
+            simulatorUuid: "uuid",
+            simulatorPath: NSTemporaryDirectory(),
+            testDestination: TestDestinationFixtures.testDestination
         ),
         simulatorControlTool: SimulatorControlToolFixtures.fakeFbsimctlTool,
         developerDir: .current

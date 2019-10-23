@@ -49,28 +49,25 @@ public class SimulatorPool: CustomStringConvertible {
     public func allocateSimulatorController() throws -> SimulatorController {
         return try syncQueue.sync {
             if let controller = controllers.popLast() {
-                Logger.verboseDebug("Allocated simulator: \(controller)")
+                Logger.verboseDebug("Allocated existing simulator controller: \(controller)")
                 return controller
             }
             
-            let folderName = "sim_\(testDestination.deviceType.removingWhitespaces())_\(testDestination.runtime)"
-            let workingDirectory = try tempFolder.pathByCreatingDirectories(components: [folderName])
-            let simulator = Simulator(testDestination: testDestination, workingDirectory: workingDirectory)
             let controller = try simulatorControllerProvider.createSimulatorController(
                 developerDir: developerDir,
                 developerDirLocator: developerDirLocator,
-                simulator: simulator,
-                simulatorControlTool: simulatorControlTool
+                simulatorControlTool: simulatorControlTool,
+                testDestination: testDestination
             )
-            Logger.verboseDebug("Allocated new simulator: \(controller)")
+            Logger.verboseDebug("Allocated new simulator controller: \(controller)")
             return controller
         }
     }
     
-    public func freeSimulatorController(_ simulator: SimulatorController) {
+    public func freeSimulatorController(_ controller: SimulatorController) {
         syncQueue.sync {
-            controllers.append(simulator)
-            Logger.verboseDebug("Freed simulator: \(simulator)")
+            controllers.append(controller)
+            Logger.verboseDebug("Freed simulator controller: \(controller)")
         }
     }
     

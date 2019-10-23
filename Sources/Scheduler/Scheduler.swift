@@ -182,7 +182,7 @@ public final class Scheduler {
         let runnerResult = try runner.run(
             entries: testsToRun,
             developerDir: bucket.toolchainConfiguration.developerDir,
-            simulatorInfo: allocatedSimulator.simulator.simulatorInfo
+            simulatorInfo: allocatedSimulator.simulatorInfo
         )
         
         if !runnerResult.testEntryResults.filter({ $0.isLost }).isEmpty {

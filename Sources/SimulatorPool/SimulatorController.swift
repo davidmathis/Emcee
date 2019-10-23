@@ -2,7 +2,7 @@ import Foundation
 import Models
 
 public protocol SimulatorController {
-    func bootedSimulator() throws -> Simulator
+    func bootedSimulator() throws -> SimulatorInfo
     func shutdownSimulator() throws
     func deleteSimulator() throws
 }

@@ -10,16 +10,27 @@ import SimulatorPool
 public final class FbsimctlBasedSimulatorStateMachineActionExecutor: SimulatorStateMachineActionExecutor, CustomStringConvertible {
     private let fbsimctl: ResolvableResourceLocation
     private var simulatorKeepAliveProcessController: ProcessController?
+    private let workingDirectory: AbsolutePath
 
-    public init(fbsimctl: ResolvableResourceLocation) {
+    public init(
+        fbsimctl: ResolvableResourceLocation,
+        workingDirectory: AbsolutePath
+    ) {
         self.fbsimctl = fbsimctl
+        self.workingDirectory = workingDirectory
     }
 
     public func performCreateSimulatorAction(
         environment: [String : String],
-        simulatorSetPath: AbsolutePath,
         testDestination: TestDestination
-    ) throws {
+    ) throws -> SimulatorInfo {
+        let simulatorSetPath = workingDirectory
+            .appending(component: testDestination.deviceType)
+            .appending(component: testDestination.runtime)
+            .appending(component: "sim")
+        
+        try FileManager.default.createDirectory(atPath: workingDirectory)
+        
         let processController = try ProcessController(
             subprocess: Subprocess(
                 arguments: [
@@ -37,20 +48,26 @@ public final class FbsimctlBasedSimulatorStateMachineActionExecutor: SimulatorSt
         guard createEndedEvents.count == 1, let createEndedEvent = createEndedEvents.first else {
             throw FbsimctlError.createOperationFailed("Failed to get single create ended event")
         }
-        Logger.debug("Created simulator with UUID: \(createEndedEvent.subject.udid)")
+        let simulatorUuid = createEndedEvent.subject.udid
+        Logger.debug("Created simulator with UUID: \(simulatorUuid)")
+        
+        return SimulatorInfo(
+            simulatorUuid: simulatorUuid,
+            simulatorPath: simulatorSetPath.appending(component: simulatorUuid).pathString,
+            testDestination: testDestination
+        )
     }
     
     public func performBootSimulatorAction(
         environment: [String : String],
-        simulatorSetPath: AbsolutePath,
-        simulatorUuid: String
+        simulatorInfo: SimulatorInfo
     ) throws {
         let processController = try ProcessController(
             subprocess: Subprocess(
                 arguments: [
                     fbsimctlArg,
-                    "--json", "--set", simulatorSetPath,
-                    simulatorUuid, "boot",
+                    "--json", "--set", simulatorInfo.simulatorSetPath,
+                    simulatorInfo.simulatorUuid, "boot",
                     "--locale", "ru_US",
                     "--direct-launch", "--", "listen"
                 ],
@@ -66,14 +83,11 @@ public final class FbsimctlBasedSimulatorStateMachineActionExecutor: SimulatorSt
 
         // we keep this process alive throughout the run, as it owns the simulator process.
         simulatorKeepAliveProcessController = processController
-
-
     }
     
     public func performShutdownSimulatorAction(
         environment: [String : String],
-        simulatorSetPath: AbsolutePath,
-        simulatorUuid: String
+        simulatorInfo: SimulatorInfo
     ) throws {
         if let simulatorKeepAliveProcessController = simulatorKeepAliveProcessController {
             simulatorKeepAliveProcessController.interruptAndForceKillIfNeeded()
@@ -85,8 +99,8 @@ public final class FbsimctlBasedSimulatorStateMachineActionExecutor: SimulatorSt
             subprocess: Subprocess(
                 arguments: [
                     "/usr/bin/xcrun",
-                    "simctl", "--set", simulatorSetPath,
-                    "shutdown", simulatorUuid
+                    "simctl", "--set", simulatorInfo.simulatorSetPath,
+                    "shutdown", simulatorInfo.simulatorUuid
                 ],
                 environment: environment,
                 silenceBehavior: SilenceBehavior(
@@ -100,8 +114,7 @@ public final class FbsimctlBasedSimulatorStateMachineActionExecutor: SimulatorSt
     
     public func performDeleteSimulatorAction(
         environment: [String : String],
-        simulatorSetPath: AbsolutePath,
-        simulatorUuid: String
+        simulatorInfo: SimulatorInfo
     ) throws {
         if let simulatorKeepAliveProcessController = simulatorKeepAliveProcessController {
             simulatorKeepAliveProcessController.interruptAndForceKillIfNeeded()
@@ -113,8 +126,9 @@ public final class FbsimctlBasedSimulatorStateMachineActionExecutor: SimulatorSt
             subprocess: Subprocess(
                 arguments: [
                     fbsimctlArg,
-                    "--json", "--set", simulatorSetPath,
-                    "--simulators", "delete"
+                    "--json",
+                    "--set", simulatorInfo.simulatorSetPath,
+                    simulatorInfo.simulatorUuid, "delete"
                 ],
                 environment: environment,
                 silenceBehavior: SilenceBehavior(

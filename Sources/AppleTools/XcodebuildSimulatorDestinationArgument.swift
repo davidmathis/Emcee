@@ -30,10 +30,6 @@ public class XcodebuildSimulatorDestinationArgument: SubprocessArgument {
             let testDestination = simulatorInfo.testDestination
             return "platform=iOS Simulator,name=\(testDestination.deviceType),OS=\(testDestination.runtime)"
         }
-
-        guard let simulatorUuid = simulatorInfo.simulatorUuid else {
-            throw SimulatorDestinationError.noSimulatorUuid(simulatorInfo)
-        }
-        return "platform=iOS Simulator,id=\(simulatorUuid)"
+        return "platform=iOS Simulator,id=\(simulatorInfo.simulatorUuid)"
     }
 }

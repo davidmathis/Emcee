@@ -10,8 +10,8 @@ public final class TestContextFixtures {
         developerDir: DeveloperDir = DeveloperDir.current,
         environment: [String: String] = [:],
         simulatorInfo: SimulatorInfo = SimulatorInfo(
-            simulatorUuid: nil,
-            simulatorSetPath: "",
+            simulatorUuid: "",
+            simulatorPath: "",
             testDestination: TestDestinationFixtures.testDestination
         )
     ) {

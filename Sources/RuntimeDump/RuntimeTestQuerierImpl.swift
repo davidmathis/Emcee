@@ -92,7 +92,7 @@ public final class RuntimeTestQuerierImpl: RuntimeTestQuerier {
         let runnerRunResult = try runner.runOnce(
             entriesToRun: [testQueryEntry],
             developerDir: configuration.developerDir,
-            simulatorInfo: allocatedSimulator.simulator.simulatorInfo
+            simulatorInfo: allocatedSimulator.simulatorInfo
         )
         
         guard let data = try? Data(contentsOf: runtimeEntriesJSONPath.fileUrl),
@@ -146,25 +146,14 @@ public final class RuntimeTestQuerierImpl: RuntimeTestQuerier {
     }
 
     private func simulatorForRuntimeDump(configuration: RuntimeDumpConfiguration) throws -> AllocatedSimulator {
-        if let applicationTestSupport = configuration.applicationTestSupport {
-            let simulatorPool = try onDemandSimulatorPool.pool(
-                key: OnDemandSimulatorPool.Key(
-                    developerDir: configuration.developerDir,
-                    testDestination: configuration.testDestination,
-                    simulatorControlTool: applicationTestSupport.simulatorControlTool
-                )
+        let simulatorPool = try onDemandSimulatorPool.pool(
+            key: OnDemandSimulatorPool.Key(
+                developerDir: configuration.developerDir,
+                testDestination: configuration.testDestination,
+                simulatorControlTool: configuration.applicationTestSupport?.simulatorControlTool ?? SimulatorControlTool.simctl
             )
-
-            return try simulatorPool.allocateSimulator()
-        } else {
-            return AllocatedSimulator(
-                simulator: Shimulator.shimulator(
-                    testDestination: configuration.testDestination,
-                    workingDirectory: try tempFolder.pathByCreatingDirectories(components: ["shimulator"])
-                ),
-                releaseSimulator: {}
-            )
-        }
+        )
+        return try simulatorPool.allocateSimulator()
     }
     
     private func requestedTestsNotAvailableInRuntime(

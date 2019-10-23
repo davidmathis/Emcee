@@ -1,29 +1,24 @@
 import Foundation
 import Models
-import PathLib
 
 public protocol SimulatorStateMachineActionExecutor {
     func performCreateSimulatorAction(
         environment: [String: String],
-        simulatorSetPath: AbsolutePath,
         testDestination: TestDestination
-    ) throws
+    ) throws -> SimulatorInfo
     
     func performBootSimulatorAction(
         environment: [String: String],
-        simulatorSetPath: AbsolutePath,
-        simulatorUuid: String
+        simulatorInfo: SimulatorInfo
     ) throws
     
     func performShutdownSimulatorAction(
         environment: [String: String],
-        simulatorSetPath: AbsolutePath,
-        simulatorUuid: String
+        simulatorInfo: SimulatorInfo
     ) throws
 
     func performDeleteSimulatorAction(
         environment: [String: String],
-        simulatorSetPath: AbsolutePath,
-        simulatorUuid: String
+        simulatorInfo: SimulatorInfo
     ) throws
 }

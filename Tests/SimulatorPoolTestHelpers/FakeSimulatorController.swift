@@ -4,20 +4,24 @@ import SimulatorPool
 
 public final class FakeSimulatorController: SimulatorController {
     
-    public let simulator: Simulator
+    public let simulatorInfo: SimulatorInfo
     public let simulatorControlTool: SimulatorControlTool
     public let developerDir: DeveloperDir
     public var didCallDelete = false
     public var didCallShutdown = false
     
-    public init(simulator: Simulator, simulatorControlTool: SimulatorControlTool, developerDir: DeveloperDir) {
-        self.simulator = simulator
+    public init(
+        simulatorInfo: SimulatorInfo,
+        simulatorControlTool: SimulatorControlTool,
+        developerDir: DeveloperDir
+    ) {
+        self.simulatorInfo = simulatorInfo
         self.simulatorControlTool = simulatorControlTool
         self.developerDir = developerDir
     }
     
-    public func bootedSimulator() throws -> Simulator {
-        return simulator
+    public func bootedSimulator() throws -> SimulatorInfo {
+        return simulatorInfo
     }
     
     public func deleteSimulator() throws {

@@ -7,19 +7,12 @@ import TemporaryStuff
 class SimulatorTests: XCTestCase {
     
     var tempFolder: TemporaryFolder!
-    var simulator: Simulator!
-    var home: String!
+    var simulatorInfo: SimulatorInfo!
     var testDestination: TestDestination!
     
     let uuid = "C7AFD056-F6BB-4F30-A0C6-B17810EA4B53"
     
     override func setUp() {
-        if let home = ProcessInfo.processInfo.environment["HOME"] {
-            self.home = home
-        } else {
-            XCTFail("No HOME environment")
-        }
-        
         XCTAssertNoThrow(try {
             testDestination = try TestDestination(deviceType: "iPhone X", runtime: "iOS 12.1")
             tempFolder = try TemporaryFolder()
@@ -31,28 +24,22 @@ class SimulatorTests: XCTestCase {
                 ]
             )
             
-            simulator = Simulator(
-                testDestination: testDestination,
-                workingDirectory: tempFolder.absolutePath
+            simulatorInfo = SimulatorInfo(
+                simulatorUuid: uuid,
+                simulatorPath: tempFolder.absolutePath.pathString,
+                testDestination: testDestination
             )
         }())
     }
     
     func test___uuid() throws {
-        XCTAssertEqual(simulator.uuid, uuid)
+        XCTAssertEqual(simulatorInfo.simulatorUuid, uuid)
     }
     
     func test___simulatorSetContainerPath() throws {
         XCTAssertEqual(
-            simulator.simulatorSetContainerPath,
-            AbsolutePath("\(tempFolder.absolutePath.pathString)/sim")
-        )
-    }
-    
-    func test___identifier() throws {
-        XCTAssertEqual(
-            simulator.identifier,
-            "simulator_iPhoneX_iOS12.1"
+            simulatorInfo.simulatorPath,
+            tempFolder.absolutePath.pathString
         )
     }
 }
