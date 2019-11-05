@@ -72,7 +72,7 @@ public final class FbxctestBasedTestRunner: TestRunner {
                 ),
                 environment: testContext.environment,
                 silenceBehavior: SilenceBehavior(
-                    automaticAction: .noAutomaticAction,
+                    automaticAction: .interruptAndForceKill,
                     allowedSilenceDuration: maximumAllowedSilenceDuration
                 )
             ),
