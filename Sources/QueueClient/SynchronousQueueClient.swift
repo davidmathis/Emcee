@@ -28,7 +28,7 @@ public final class SynchronousQueueClient: QueueClientDelegate {
     
     public init(
         queueServerAddress: SocketAddress,
-        requestTimeout: TimeInterval = 10,
+        requestTimeout: TimeInterval = 60,
         networkRequestRetryCount: Int = 5
     ) {
         self.requestTimeout = requestTimeout
