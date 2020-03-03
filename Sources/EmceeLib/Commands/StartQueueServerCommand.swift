@@ -29,21 +29,21 @@ public final class StartQueueServerCommand: Command {
     ]
     
     private let localQueueVersionProvider: VersionProvider
-    private let requestSenderProvider: RequestSenderProvider
     private let payloadSignature: PayloadSignature
+    private let requestSenderProvider: RequestSenderProvider
     private let resourceLocationResolver: ResourceLocationResolver
     private let uniqueIdentifierGenerator: UniqueIdentifierGenerator
 
     public init(
         localQueueVersionProvider: VersionProvider,
-        requestSenderProvider: RequestSenderProvider,
         payloadSignature: PayloadSignature,
+        requestSenderProvider: RequestSenderProvider,
         resourceLocationResolver: ResourceLocationResolver,
         uniqueIdentifierGenerator: UniqueIdentifierGenerator
     ) {
         self.localQueueVersionProvider = localQueueVersionProvider
-        self.requestSenderProvider = requestSenderProvider
         self.payloadSignature = payloadSignature
+        self.requestSenderProvider = requestSenderProvider
         self.resourceLocationResolver = resourceLocationResolver
         self.uniqueIdentifierGenerator = uniqueIdentifierGenerator
     }
@@ -68,16 +68,19 @@ public final class StartQueueServerCommand: Command {
     ) throws {
         Logger.info("Generated payload signature: \(payloadSignature)")
         
+        let workerMaximumSilentDuration: TimeInterval = 60.0
+        
         let automaticTerminationController = AutomaticTerminationControllerFactory(
             automaticTerminationPolicy: queueServerRunConfiguration.queueServerTerminationPolicy
         ).createAutomaticTerminationController()
+        
         let queueServer = QueueServerImpl(
             automaticTerminationController: automaticTerminationController,
             dateProvider: SystemDateProvider(),
             workerConfigurations: createWorkerConfigurations(
                 queueServerRunConfiguration: queueServerRunConfiguration
             ),
-            reportAliveInterval: queueServerRunConfiguration.reportAliveInterval,
+            maximumNotReportingDuration: workerMaximumSilentDuration,
             checkAgainTimeInterval: queueServerRunConfiguration.checkAgainTimeInterval,
             localPortDeterminer: LocalPortDeterminer(portRange: Ports.defaultQueuePortRange),
             workerAlivenessPolicy: .workersStayAliveWhenQueueIsDepleted,
@@ -89,8 +92,10 @@ public final class StartQueueServerCommand: Command {
             ),
             queueVersionProvider: localQueueVersionProvider,
             payloadSignature: payloadSignature,
+            requestSenderProvider: requestSenderProvider,
             uniqueIdentifierGenerator: uniqueIdentifierGenerator
         )
+        
         let pollPeriod: TimeInterval = 5.0
         let queueServerTerminationWaiter = QueueServerTerminationWaiterImpl(
             pollInterval: pollPeriod,

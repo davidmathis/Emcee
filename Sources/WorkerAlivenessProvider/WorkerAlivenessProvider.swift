@@ -11,7 +11,7 @@ public protocol WorkerAlivenessProvider: class {
     func didDequeueBucket(bucketId: BucketId, workerId: WorkerId)
     
     func didRegisterWorker(workerId: WorkerId)
-    func blockWorker(workerId: WorkerId) 
+    func blockWorker(workerId: WorkerId)
 }
 
 public extension WorkerAlivenessProvider {

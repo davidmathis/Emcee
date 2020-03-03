@@ -5,7 +5,6 @@ public enum RESTMethod: String {
     case getBucket
     case queueVersion
     case registerWorker
-    case reportAlive
     case scheduleTests
     case jobState
     case jobResults

@@ -11,6 +11,7 @@ import PortDeterminer
 import QueueModels
 import RESTMethods
 import RESTServer
+import RequestSender
 import ScheduleStrategy
 import Swifter
 import SynchronousWaiter
@@ -30,8 +31,8 @@ public final class QueueServerImpl: QueueServer {
     private let scheduleTestsHandler: ScheduleTestsEndpoint
     private let stuckBucketsPoller: StuckBucketsPoller
     private let testsEnqueuer: TestsEnqueuer
-    private let workerAlivenessEndpoint: WorkerAlivenessEndpoint
     private let workerAlivenessMatricCapturer: WorkerAlivenessMatricCapturer
+    private let workerAlivenessPoller: WorkerAlivenessPoller
     private let workerAlivenessProvider: WorkerAlivenessProvider
     private let workerRegistrar: WorkerRegistrar
     
@@ -39,7 +40,7 @@ public final class QueueServerImpl: QueueServer {
         automaticTerminationController: AutomaticTerminationController,
         dateProvider: DateProvider,
         workerConfigurations: WorkerConfigurations,
-        reportAliveInterval: TimeInterval,
+        maximumNotReportingDuration: TimeInterval,
         checkAgainTimeInterval: TimeInterval,
         localPortDeterminer: LocalPortDeterminer,
         workerAlivenessPolicy: WorkerAlivenessPolicy,
@@ -47,12 +48,19 @@ public final class QueueServerImpl: QueueServer {
         queueServerLock: QueueServerLock,
         queueVersionProvider: VersionProvider,
         payloadSignature: PayloadSignature,
+        requestSenderProvider: RequestSenderProvider,
         uniqueIdentifierGenerator: UniqueIdentifierGenerator
     ) {
+        let workerDetailsHolder = WorkerDetailsHolderImpl()
         self.workerAlivenessProvider = WorkerAlivenessProviderImpl(
             dateProvider: dateProvider,
-            reportAliveInterval: reportAliveInterval,
-            additionalTimeToPerformWorkerIsAliveReport: 30.0
+            maximumNotReportingDuration: maximumNotReportingDuration
+        )
+        self.workerAlivenessPoller = WorkerAlivenessPoller(
+            pollInterval: 20,
+            requestSenderProvider: requestSenderProvider,
+            workerAlivenessProvider: workerAlivenessProvider,
+            workerDetailsHolder: workerDetailsHolder
         )
         let balancingBucketQueueFactory = BalancingBucketQueueFactory(
             bucketQueueFactory: BucketQueueFactory(
@@ -84,13 +92,10 @@ public final class QueueServerImpl: QueueServer {
             testsEnqueuer: testsEnqueuer,
             uniqueIdentifierGenerator: uniqueIdentifierGenerator
         )
-        self.workerAlivenessEndpoint = WorkerAlivenessEndpoint(
-            workerAlivenessProvider: workerAlivenessProvider,
-            expectedPayloadSignature: payloadSignature
-        )
         self.workerRegistrar = WorkerRegistrar(
             workerConfigurations: workerConfigurations,
-            workerAlivenessProvider: workerAlivenessProvider
+            workerAlivenessProvider: workerAlivenessProvider,
+            workerDetailsHolder: workerDetailsHolder
         )
         self.stuckBucketsPoller = StuckBucketsPoller(
             statefulStuckBucketsReenqueuer: balancingBucketQueue
@@ -139,7 +144,6 @@ public final class QueueServerImpl: QueueServer {
             jobResultsHandler: RESTEndpointOf(actualHandler: jobResultsEndpoint),
             jobStateHandler: RESTEndpointOf(actualHandler: jobStateEndpoint),
             registerWorkerHandler: RESTEndpointOf(actualHandler: workerRegistrar),
-            reportAliveHandler: RESTEndpointOf(actualHandler: workerAlivenessEndpoint),
             scheduleTestsHandler: RESTEndpointOf(actualHandler: scheduleTestsHandler),
             versionHandler: RESTEndpointOf(actualHandler: queueServerVersionHandler)
         )

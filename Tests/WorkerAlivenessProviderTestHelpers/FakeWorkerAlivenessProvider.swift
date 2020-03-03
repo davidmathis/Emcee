@@ -9,8 +9,7 @@ public final class WorkerAlivenessProviderFixtures {
     ) -> WorkerAlivenessProvider {
         return WorkerAlivenessProviderImpl(
             dateProvider: dateProvider,
-            reportAliveInterval: .infinity,
-            additionalTimeToPerformWorkerIsAliveReport: .infinity
+            maximumNotReportingDuration: .infinity
         )
     }
     
@@ -19,8 +18,7 @@ public final class WorkerAlivenessProviderFixtures {
     ) -> WorkerAlivenessProvider {
         return WorkerAlivenessProviderImpl(
             dateProvider: dateProvider,
-            reportAliveInterval: 0.0,
-            additionalTimeToPerformWorkerIsAliveReport: 0.0
+            maximumNotReportingDuration: 0.0
         )
     }
 }

@@ -45,7 +45,7 @@ final class QueueServerTests: XCTestCase {
             automaticTerminationController: automaticTerminationController,
             dateProvider: DateProviderFixture(),
             workerConfigurations: workerConfigurations,
-            reportAliveInterval: .infinity,
+            maximumNotReportingDuration: 60,
             checkAgainTimeInterval: .infinity, 
             localPortDeterminer: localPortDeterminer,
             workerAlivenessPolicy: .workersTerminateWhenQueueIsDepleted,
@@ -53,6 +53,7 @@ final class QueueServerTests: XCTestCase {
             queueServerLock: NeverLockableQueueServerLock(),
             queueVersionProvider: queueVersionProvider,
             payloadSignature: payloadSignature,
+            requestSenderProvider: DefaultRequestSenderProvider(),
             uniqueIdentifierGenerator: uniqueIdentifierGenerator
         )
         XCTAssertThrowsError(try server.queueResults(jobId: jobId))
@@ -81,7 +82,7 @@ final class QueueServerTests: XCTestCase {
             automaticTerminationController: terminationController,
             dateProvider: DateProviderFixture(),
             workerConfigurations: workerConfigurations,
-            reportAliveInterval: .infinity,
+            maximumNotReportingDuration: 60,
             checkAgainTimeInterval: .infinity,
             localPortDeterminer: localPortDeterminer,
             workerAlivenessPolicy: .workersTerminateWhenQueueIsDepleted,
@@ -89,6 +90,7 @@ final class QueueServerTests: XCTestCase {
             queueServerLock: NeverLockableQueueServerLock(),
             queueVersionProvider: queueVersionProvider,
             payloadSignature: payloadSignature,
+            requestSenderProvider: DefaultRequestSenderProvider(),
             uniqueIdentifierGenerator: uniqueIdentifierGenerator
         )
         server.schedule(
@@ -117,6 +119,7 @@ final class QueueServerTests: XCTestCase {
         _ = try runSyncronously { [callbackQueue, workerId] completion in
             workerRegisterer.registerWithServer(
                 workerId: workerId,
+                workerRestPort: 0,
                 callbackQueue: callbackQueue
             ) { _ in
                 completion(Void())

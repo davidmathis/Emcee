@@ -5,21 +5,19 @@ import Logging
 import Models
 
 public final class WorkerAlivenessProviderImpl: WorkerAlivenessProvider {
-    private let syncQueue = DispatchQueue(label: "ru.avito.emcee.workerAlivenessProvider.syncQueue")
     private let dateProvider: DateProvider
-    private var workerAliveReportTimestamps = [WorkerId: Date]()
+    private let maximumNotReportingDuration: TimeInterval
+    private let syncQueue = DispatchQueue(label: "ru.avito.emcee.workerAlivenessProvider.syncQueue")
     private let workerBucketIdsBeingProcessed = WorkerCurrentlyProcessingBucketsTracker()
     private var blockedWorkers = Set<WorkerId>()
-    /// allow worker some additinal time to perform a "i'm alive" report, e.g. to compensate a network latency
-    private let maximumNotReportingDuration: TimeInterval
+    private var workerAliveReportTimestamps = [WorkerId: Date]()
 
     public init(
         dateProvider: DateProvider,
-        reportAliveInterval: TimeInterval,
-        additionalTimeToPerformWorkerIsAliveReport: TimeInterval
+        maximumNotReportingDuration: TimeInterval
     ) {
         self.dateProvider = dateProvider
-        self.maximumNotReportingDuration = reportAliveInterval + additionalTimeToPerformWorkerIsAliveReport
+        self.maximumNotReportingDuration = maximumNotReportingDuration
     }
     
     public func didDequeueBucket(bucketId: BucketId, workerId: WorkerId) {
@@ -63,7 +61,10 @@ public final class WorkerAlivenessProviderImpl: WorkerAlivenessProvider {
     
     public func alivenessForWorker(workerId: WorkerId) -> WorkerAliveness {
         return syncQueue.sync {
-            onSyncQueue_alivenessForWorker(workerId: workerId, currentDate: Date())
+            onSyncQueue_alivenessForWorker(
+                workerId: workerId,
+                currentDate: Date()
+            )
         }
     }
     
@@ -78,7 +79,10 @@ public final class WorkerAlivenessProviderImpl: WorkerAlivenessProvider {
         return workerAliveness
     }
     
-    private func onSyncQueue_alivenessForWorker(workerId: WorkerId, currentDate: Date) -> WorkerAliveness {
+    private func onSyncQueue_alivenessForWorker(
+        workerId: WorkerId,
+        currentDate: Date
+    ) -> WorkerAliveness {
         guard let latestAliveDate = workerAliveReportTimestamps[workerId] else {
             return WorkerAliveness(status: .notRegistered, bucketIdsBeingProcessed: [])
         }

@@ -9,10 +9,7 @@ public final class WorkerConfigurationFixtures {
             graphiteConfiguration: nil,
             sentryConfiguration: nil
         ),
-        reportAliveInterval: 42,
-        payloadSignature: PayloadSignature(value: "payloadSignature"),
-        testRunExecutionBehavior: TestRunExecutionBehavior(
-            numberOfSimulators: 2
-        )
+        numberOfSimulators: 2,
+        payloadSignature: PayloadSignature(value: "payloadSignature")
     )
 }
