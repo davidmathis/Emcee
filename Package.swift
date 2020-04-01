@@ -158,6 +158,7 @@ let package = Package(
                 "DateProvider",
                 "Logging",
                 "Models",
+                "QueueCommunication",
                 "QueueModels",
                 "ResultsCollector",
             ]
@@ -694,6 +695,7 @@ let package = Package(
                 "LoggingSetup",
                 "Models",
                 "PortDeterminer",
+                "QueueCommunication",
                 "QueueServer",
                 "RemotePortDeterminer",
                 "RequestSender",
@@ -948,6 +950,16 @@ let package = Package(
                 "SimulatorPoolTestHelpers",
                 "Swifter",
                 "SynchronousWaiter",
+            ]
+        ),
+        .target(
+            // MARK: QueueCommunication
+            name: "QueueCommunication",
+            dependencies: [
+                "Logging",
+                "Models",
+                "RESTMethods",
+                "RequestSender"
             ]
         ),
         .target(

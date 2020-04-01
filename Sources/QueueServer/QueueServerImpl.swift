@@ -8,6 +8,7 @@ import Foundation
 import Logging
 import Models
 import PortDeterminer
+import QueueCommunication
 import QueueModels
 import RESTMethods
 import RESTServer
@@ -76,7 +77,8 @@ public final class QueueServerImpl: QueueServer {
             ),
             nothingToDequeueBehavior: workerAlivenessPolicy.nothingToDequeueBehavior(
                 checkLaterInterval: checkAgainTimeInterval
-            )
+            ),
+            workerPermissionProvider: DummyWorkerPermissionProvider()
         )
         self.balancingBucketQueue = balancingBucketQueueFactory.create()
         self.restServer = QueueHTTPRESTServer(
